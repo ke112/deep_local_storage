@@ -4,10 +4,6 @@ import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 初始化存储系统，可选择是否启用日志
-  await DeepLocalStorage.initialize();
-
   runApp(const MyApp());
 }
 

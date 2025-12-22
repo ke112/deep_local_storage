@@ -18,17 +18,10 @@ class DeepLocalStorage {
   /// 获取单例实例
   factory DeepLocalStorage() => _instance;
 
-  /// 初始化存储系统
-  /// 建议在main函数中WidgetsFlutterBinding.ensureInitialized()之后调用
-  ///
-  /// [enableLogging] 可选参数，控制是否启用调试日志。默认为true。
-  /// 如果设置为false，将禁用所有调试日志输出。
-  static Future<void> initialize({bool enableLogging = true}) async {
-    if (_instance._isInitialized) return;
-
-    _instance._enableLogging = enableLogging;
-    _instance._isInitialized = true;
-    _log('DeepLocalStorage初始化成功', tag: 'Init');
+  /// 控制是否启用调试日志
+  /// 默认在调试模式下启用，发布模式下禁用
+  static set enableLogging(bool value) {
+    _instance._enableLogging = value;
   }
 
   DeepLocalStorage._internal();
@@ -36,23 +29,20 @@ class DeepLocalStorage {
   final Uuid _uuid = const Uuid();
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
 
-  // 标记是否已初始化
-  bool _isInitialized = false;
-
-  // 缓存Android ID
-  String? _cachedAndroidId;
+  // 缓存设备ID（Android和iOS/macOS共用）
+  String? _cachedDeviceId;
 
   // 设备ID的存储键（用于iOS/macOS Keychain存储）
   static const String _deviceIdKey = 'deep_local_storage_device_id';
 
   static const String _fallbackKey = 'deep_local_storage_android_fallback_device_id';
 
-  /// 控制是否启用调试日志
-  bool _enableLogging = true;
+  /// 控制是否启用调试日志（默认在调试模式下启用）
+  bool _enableLogging = kDebugMode;
 
   /// 统一的日志打印方法
   static void _log(String message, {String? tag}) {
-    if (!_instance._enableLogging || !kDebugMode) return;
+    if (!_instance._enableLogging) return;
 
     final logMessage = tag != null ? '[DeepLocalStorage $tag] $message' : '[DeepLocalStorage] $message';
     debugPrint(logMessage);
@@ -87,8 +77,8 @@ class DeepLocalStorage {
   /// 获取Android系统级设备ID
   Future<String> _getAndroidDeviceId() async {
     // 使用缓存避免重复调用
-    if (_cachedAndroidId != null && _cachedAndroidId!.isNotEmpty) {
-      return _cachedAndroidId!;
+    if (_cachedDeviceId != null && _cachedDeviceId!.isNotEmpty) {
+      return _cachedDeviceId!;
     }
 
     try {
@@ -96,19 +86,19 @@ class DeepLocalStorage {
       final androidId = androidInfo.id;
 
       if (androidId.isNotEmpty) {
-        _cachedAndroidId = androidId;
+        _cachedDeviceId = androidId;
         _log('获取Android系统ID成功: $androidId', tag: 'DeviceID');
         return androidId;
       }
 
       // 如果Android ID为空，从本地存储获取或生成fallback ID
       _log('Android系统ID为空，使用fallback设备ID', tag: 'DeviceID');
-      _cachedAndroidId = await _getOrCreateFallbackDeviceId();
-      return _cachedAndroidId!;
+      _cachedDeviceId = await _getOrCreateFallbackDeviceId();
+      return _cachedDeviceId!;
     } catch (e) {
       _log('获取Android系统ID失败: $e，使用fallback设备ID', tag: 'DeviceID');
-      _cachedAndroidId = await _getOrCreateFallbackDeviceId();
-      return _cachedAndroidId!;
+      _cachedDeviceId = await _getOrCreateFallbackDeviceId();
+      return _cachedDeviceId!;
     }
   }
 
@@ -131,8 +121,14 @@ class DeepLocalStorage {
 
   /// 获取iOS/macOS的设备ID（使用Keychain）
   Future<String> _getKeychainDeviceId() async {
+    // 使用缓存避免重复调用
+    if (_cachedDeviceId != null && _cachedDeviceId!.isNotEmpty) {
+      return _cachedDeviceId!;
+    }
+
     final storedId = await readString(_deviceIdKey, type: StorageType.credentials);
     if (storedId != null && storedId.isNotEmpty) {
+      _cachedDeviceId = storedId;
       _log('读取已存在的设备ID: $storedId', tag: 'DeviceID');
       return storedId;
     }
@@ -140,6 +136,7 @@ class DeepLocalStorage {
     // 生成新的设备ID并存储到Keychain
     final newDeviceId = _uuid.v4();
     await saveString(_deviceIdKey, newDeviceId, type: StorageType.credentials);
+    _cachedDeviceId = newDeviceId;
     _log('生成了新的设备ID: $newDeviceId', tag: 'DeviceID');
 
     return newDeviceId;

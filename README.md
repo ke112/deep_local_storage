@@ -51,17 +51,14 @@ import 'package:deep_local_storage/deep_local_storage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize with logging enabled (recommended for development)
-  await DeepLocalStorage.initialize(enableLogging: true);
-
-  // Or disable logging for production
-  // await DeepLocalStorage.initialize(enableLogging: false);
+  // Optional: Control logging output (enabled by default in debug mode)
+  // DeepLocalStorage.enableLogging = false; // Disable logging for production
 
   runApp(const MyApp());
 }
 ```
 
-**Note**: Calling `initialize()` is optional. It primarily controls logging output.
+**Note**: The library initializes automatically when first used. Logging is enabled by default in debug mode.
 
 ### Logging Control
 
@@ -199,17 +196,14 @@ Singleton class for local storage operations.
 
 #### Properties
 
-| Property        | Type   | Default | Description                             |
-| --------------- | ------ | ------- | --------------------------------------- |
-| `enableLogging` | `bool` | `true`  | Controls whether debug logs are printed |
+| Property        | Type   | Default      | Description                             |
+| --------------- | ------ | ------------ | --------------------------------------- |
+| `enableLogging` | `bool` | `kDebugMode` | Controls whether debug logs are printed |
 
 #### Methods
 
 | Method                              | Parameters                                          | Return               | Description                     |
 | ----------------------------------- | --------------------------------------------------- | -------------------- | ------------------------------- |
-| Method                              | Parameters                                          | Return               | Description                     |
-| ----------------------------------- | --------------------------------------------------- | -------------------- | ------------------------------- |
-| `initialize([enableLogging])`       | `[bool enableLogging = true]`                       | `Future<void>`       | Initialize storage system       |
 | `getDeviceId()`                     | -                                                   | `Future<String>`     | Get persistent device ID        |
 | `saveString(key, value, [type])`    | `String key, String value, [StorageType type]`      | `Future<void>`       | Store string value              |
 | `readString(key, [type])`           | `String key, [StorageType type]`                    | `Future<String?>`    | Read string value               |
