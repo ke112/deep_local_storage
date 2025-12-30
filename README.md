@@ -270,3 +270,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<img src="example/assets/images/ios_1.png" width="300" />
+
+<img src="example/assets/images/android_1.png" width="300" />
